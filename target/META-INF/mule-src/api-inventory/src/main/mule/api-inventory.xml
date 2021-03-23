@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:file="http://www.mulesoft.org/schema/mule/file" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="19de457a-f655-4165-8aeb-3bc552ea45d2" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<flow name="loadStaticResourcesFlow" doc:id="9ab96dd6-fe71-4723-a732-35e0a840adc1" >
+		<http:listener doc:name="Listener" doc:id="8fbbb4ff-ef8b-4dba-bf04-b03278e02b9c" config-ref="HTTP_Listener_config" path="/*" allowedMethods="GET" />
+		<http:load-static-resource doc:name="Load static resource" doc:id="5869063b-badf-46a3-9869-d2403f8fa13e" resourceBasePath="${app.home}/web/" />
+	</flow>
+	<flow name="homePageFlow" doc:id="17a2bd23-c029-4e33-a49e-5fd4b802e6a8" >
+		<http:listener doc:name="Listener" doc:id="b7641d2d-e415-4c2e-9db7-e6997e4319ba" config-ref="HTTP_Listener_config" path="/index"/>
+		<parse-template doc:name="Parse Template" doc:id="4773fbcb-3baf-4fb9-98e8-0bf34cc5deb3" location="web\index.html"/>
+	</flow>
+	<flow name="routingTemplateFlow" doc:id="7c45570d-dbdd-4f7b-ada3-6b096e7f562a" >
+		<http:listener doc:name="Listener" doc:id="f6063dac-d6eb-406b-a9f1-73a457576c1c" config-ref="HTTP_Listener_config" path="/getResource"/>
+		<ee:transform doc:name="Transform Message" doc:id="7f4dbe49-3681-4bcf-ad13-71dac8b36671" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="originalData" ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<choice doc:name="Choice" doc:id="6245df17-e023-4ba0-a2fe-049a967ad251" >
+			<when expression='#[(lower(vars.originalData.market)=="jamaica") or (lower(vars.originalData.market)=="panama") or (lower(vars.originalData.market)=="puerto rico") or (lower(vars.originalData.market)=="vtr") or (lower(vars.originalData.market)=="costa rica") or (lower(vars.originalData.market)=="chile")]'>
+				<flow-ref doc:name="Flow Reference" doc:id="83e7ce2e-8132-459b-a2bb-b4c3bafff707" name="readFilesFlow" />
+				<ee:transform doc:name="Transform Message" doc:id="e111697e-cb47-441d-b64e-c55da6118073">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload as Array]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+				<ee:transform doc:name="Transform Message" doc:id="20b6d4bc-c725-46cd-91a2-5af5f8c12b06">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+var appName = payload.*'Application Name'
+var country = payload.*'Country' map ($ splitBy  ",")
+---
+payload map (payload01 , index) -> {
+    application: country map {
+        "Application Name": payload01.'Application Name',
+        "Country": (payload01.'Country' splitBy  ",")[$$],
+        url: payload01.url
+    }
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+				<ee:transform doc:name="Transform Message" doc:id="bd0e3328-35a4-4998-a91b-5a8030cb05dc">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+flatten(payload.application) filter(value,index) -> (value.'Country' != null)]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+				<ee:transform doc:name="Transform Message" doc:id="7444961a-0c12-4d8a-9f6a-760cd4b176ec">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+(payload filter ((value,index) -> 
+	(((lower(value.'Country')==lower(vars.originalData.market)) or (value.'Country' == "Common"))) and 
+	(lower(value.'Application Name') == lower(vars.originalData.project))
+))]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+				<parse-template doc:name="Parse Template" doc:id="31c09bdc-42e3-4b53-a1d9-e3013723c40d" location="web\logicResource.html" />
+			</when>
+			<otherwise>
+				<ee:transform doc:name="Transform Message" doc:id="522fb877-3dc3-43f3-a657-e9ad75ad1559" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+{
+	"message": "Inavlid Resource Name...",
+	"pageMessage": "You will be redirected to home page",
+	"page": "index"	
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+				<flow-ref doc:name="Flow Reference" doc:id="75b4bebf-dc99-49e0-aaa5-c293172d1232" name="commonFlow"/>
+			</otherwise>
+		</choice>
+	</flow>
+	<flow name="liberateFlow" doc:id="353a2f59-5ab8-4c92-92fa-42843b4e4f4a" >
+		<http:listener doc:name="Listener" doc:id="55e5d3a2-21b1-4ca0-82b0-841e09c26437" config-ref="HTTP_Listener_config" path="/liberate"/>
+		<flow-ref doc:name="Flow Reference" doc:id="c2e1e6a4-5037-4eeb-9517-ca827bccbcc6" name="readFilesFlow"/>
+		<ee:transform doc:name="Transform Message" doc:id="a8655ae8-a7e6-4fe4-bad4-d1633b8ed2e7">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+import * from dw::core::Strings
+output application/csv
+---
+(payload filter ((value,index) -> ((lower(value.'Backend System')=="liberate") or (value.'Backend System' == "Common"))))]]></ee:set-payload>
+			</ee:message>
+			<ee:variables />
+		</ee:transform>
+		<parse-template doc:name="Parse Template" doc:id="4b5a6ff5-55cd-4598-af62-216ea7d8438f" location="web\logicResource.html" />
+	</flow>
+	<flow name="cerillionFlow" doc:id="a2c66b15-e5b0-4ec5-8183-e3268d4a6548" >
+		<http:listener doc:name="Listener" doc:id="00788f27-378d-4f90-876e-4a6029355515" config-ref="HTTP_Listener_config" path="/cerillion" />
+		<flow-ref doc:name="Flow Reference" doc:id="3c83126e-eecb-427b-89e8-1c2bb8a4dd70" name="readFilesFlow"/>
+		<ee:transform doc:name="Transform Message" doc:id="81141f81-11ed-408f-b6d4-30e5ecef5032" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+import * from dw::core::Strings
+output application/csv
+---
+(payload filter ((value,index) -> ((lower(value.'Backend System')=="cerillion") or (value.'Backend System' == "Common"))))]]></ee:set-payload>
+			</ee:message>
+			<ee:variables />
+		</ee:transform>
+		<parse-template doc:name="Parse Template" doc:id="29d7f374-e3f3-4281-b791-1fdd0beb850b" location="web\logicResource.html" />
+	</flow>
+	<flow name="tmfFlow" doc:id="4726323d-495f-4ee2-9c84-5f16291f3f3b" >
+		<http:listener doc:name="Listener" doc:id="a3bc91ff-1998-42ed-947e-b2ab28072156" config-ref="HTTP_Listener_config" path="/tmf" />
+		<file:read doc:name="Read" doc:id="0e45ab31-90c1-484e-becb-1373b717a9df" path="${app.home}\llaPlatforms.csv" />
+		<ee:transform doc:name="Transform Message" doc:id="8af53b31-a0be-4832-b3e8-e883ec8f591d" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+import * from dw::core::Strings
+output application/csv
+---
+(payload filter ((value,index) -> ((lower(value.'Backend System')=="liberate") or (value.'Backend System' == "Common"))))]]></ee:set-payload>
+			</ee:message>
+			<ee:variables />
+		</ee:transform>
+		<parse-template doc:name="Parse Template" doc:id="53f46e01-6ba5-4464-ac34-fb78dfec3713" location="web\logicResource.html" />
+	</flow>
+	<flow name="notFoundFlow" doc:id="0dab6819-f117-47da-bcfb-183705405305" >
+		<http:listener doc:name="Listener" doc:id="ac942cc7-41b2-4a20-8edb-3af0c0dbb551" config-ref="HTTP_Listener_config" path="/notFound"/>
+		<ee:transform doc:name="Transform Message" doc:id="9a82db75-046b-466a-a1b5-53d392a160f5" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"message": "Under Progress",
+	"pageMessage": "",
+	"page": "#"
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<flow-ref doc:name="Flow Reference" doc:id="d0bcec62-663d-491d-9e90-994411e140e8" name="commonFlow"/>
+	</flow>
+	<flow name="readFilesFlow" doc:id="7aa56d0a-ff11-4d52-afac-50ed01be5949" >
+		<file:read doc:name="Read" doc:id="44161a35-b488-482a-aea8-8e0ea319337b" path="${app.home}\llaPlatforms.csv"/>
+	
+</flow>
+	<flow name="commonFlow" doc:id="68e5ff68-ec80-4b10-b42f-664f2bbe5dac" >
+		<parse-template doc:name="Parse Template" doc:id="26198217-06d0-4c8d-9d46-d3f3d009f6ce" location="web\common.html" />
+	</flow>
+</mule>

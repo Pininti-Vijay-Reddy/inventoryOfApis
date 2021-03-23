@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>HomePageForm</title>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+		<!-- MATERIAL DESIGN ICONIC FONT -->
+		<link rel="stylesheet" href="fonts/material-design-iconic-font/css/material-design-iconic-font.min.css">
+		
+		<!-- STYLE CSS -->
+		<link rel="stylesheet" href="css/style.css">
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+		<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+	<style>
+	table
+	{
+	width: 60%;
+	
+	}
+	</style>
+	</head>
+
+	<body>
+		<nav class="navbar navbar-inverse">
+			<div class="container-fluid">
+				<div class="navbar-header">
+					<a class="navbar-brand">LLA</a>
+				</div>
+			</div>
+		</nav>
+		<div class="wrapper" style="background-image: url('images/bg-registration-form-2.jpg');">
+			<div class="inner">
+				<form action="/getResource" method="post">
+					<div class="form-wrapper">
+						<label for="markets">Market:</label>
+						<input type="text" name="market" class="form-control" required> 
+					</div>
+					<div class="form-wrapper">
+						<label for="projects">Project:</label>
+						<input type="text" name="project" class="form-control" required>
+					</div>
+					<div class="form-wrapper">
+						<label for="tmfs">#TMF:</label>
+						<input type="text" name="tmf" class="form-control" required>
+					</div>
+					<div class="form-wrapper">
+						<button type="submit">Submit</button>
+					</div>
+					
+					
+				</form>
+				
+				<h1>API Selection</h1>
+<table>
+<td>
+
+  <a href="/tmf"><img src= "images/TMF.png" align= "center" style="width:128px;height:128px;"/></a></td>
+
+  <td>
+  
+  <a href="/cerillion"><img src= "images/cerillion.png" align= "center" style="width:128px;height:128px;"/></a> </td>
+ 
+  <td>
+ 
+  <a href="/liberate"><img src ="images/liberate.png"  align= "center" style="width:128px;height:128px;"/></a></td>
+
+</table>
+
+			</div>
+		</div>
+		
+	</body>
+</html>

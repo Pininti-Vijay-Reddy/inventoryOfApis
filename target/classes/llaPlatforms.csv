@@ -1,0 +1,20 @@
+Application Name,Backend System,Country,Program,Production/Development In Progress,url
+ecom-ux,Common,Common,ECOMMERCE,Production,https://esb-test.lla.com/ecom-ux/v1/console/
+customer-management-biz,Common,Common,ECOMMERCE,Production,/notFound
+product-ordering-biz,Common,Common,ECOMMERCE,Production,/notFound
+account-management-biz,Common,Common,ECOMMERCE,Production,/notFound
+payment-management-biz,Common,Common,ECOMMERCE,Production,/notFound
+liberate-customer-sys,Liberate,"Jamaica,Panama",ECOMMERCE,Production,/notFound
+cerillion-customer-sys,Cerillion,Jamaica,ECOMMERCE,Production,/notFound
+liberate-product-ordering-sys,Liberate,"Jamaica,Panama",ECOMMERCE,Production,/notFound
+cerillion-product-ordering-sys,Cerillion,Jamaica,ECOMMERCE,Production,/notFound
+liberate-payment-management-sys,Liberate,Jamaica,ECOMMERCE,Production,/notFound
+cerillion-payment-management-sys,Cerillion,Jamaica,ECOMMERCE,Production,/notFound
+communication-sys,Common,Common,ECOMMERCE,Production,/notFound
+csg-customer-sys,CSG(LCPR),LCPR,ECOMMERCE,Production,/notFound
+csg-product-orfering-sys,CSG(LCPR),LCPR,ECOMMERCE,Production,/notFound
+andes-customer-sys,Andes(Chile),Chile,ECOMMERCE,Dev,http://172.21.7.118:9092/andes-acct-management-sys/v1/console/
+andes-product-ordering-sys,Andes(Chile),Chile,ECOMMERCE,Dev,/notFound
+vtr-common-utility-sys,Andes(Chile),Chile,ECOMMERCE,Dev,/notFound
+ecom-sales-ux,Common,Common,ECOMMERCE,Dev,/notFound
+sfdc-ux,Common,Common,B2B,QA,/notFound

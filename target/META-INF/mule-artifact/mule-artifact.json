@@ -1,0 +1,48 @@
+{
+  "configs": [
+    "api-inventory.xml"
+  ],
+  "secureProperties": [],
+  "redeploymentEnabled": true,
+  "name": "com.mycompany:api-inventory:1.0.0-SNAPSHOT",
+  "minMuleVersion": "4.3.0",
+  "requiredProduct": "MULE_EE",
+  "classLoaderModelLoaderDescriptor": {
+    "id": "mule",
+    "attributes": {
+      "exportedPackages": [],
+      "exportedResources": [
+        "api-inventory.xml",
+        "application-types.xml",
+        "llaPlatforms.csv",
+        "log4j2.xml",
+        "web/common.html",
+        "web/css/ni-style.css",
+        "web/css/style.css",
+        "web/css/style.css.map",
+        "web/css/style.scss",
+        "web/fonts/material-design-iconic-font/css/material-design-iconic-font.css",
+        "web/fonts/material-design-iconic-font/css/material-design-iconic-font.min.css",
+        "web/fonts/material-design-iconic-font/fonts/Material-Design-Iconic-Font.eot",
+        "web/fonts/material-design-iconic-font/fonts/Material-Design-Iconic-Font.svg",
+        "web/fonts/material-design-iconic-font/fonts/Material-Design-Iconic-Font.ttf",
+        "web/fonts/material-design-iconic-font/fonts/Material-Design-Iconic-Font.woff",
+        "web/fonts/material-design-iconic-font/fonts/Material-Design-Iconic-Font.woff2",
+        "web/fonts/muli/Muli-Bold.ttf",
+        "web/fonts/muli/Muli-Regular.ttf",
+        "web/fonts/muli/Muli-SemiBold.ttf",
+        "web/images/bg-registration-form-2.jpg",
+        "web/images/cerillion.png",
+        "web/images/liberate.png",
+        "web/images/registration-form-2.jpg",
+        "web/images/TMF.png",
+        "web/index.html",
+        "web/logicResource.html"
+      ]
+    }
+  },
+  "bundleDescriptorLoader": {
+    "id": "mule",
+    "attributes": {}
+  }
+}
