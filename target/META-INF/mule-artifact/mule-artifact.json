@@ -14,8 +14,8 @@
       "exportedResources": [
         "api-inventory.xml",
         "application-types.xml",
-        "llaPlatforms.csv",
         "log4j2.xml",
+        "tmfDetails.csv",
         "web/common.html",
         "web/css/ni-style.css",
         "web/css/style.css",
@@ -37,7 +37,8 @@
         "web/images/registration-form-2.jpg",
         "web/images/TMF.png",
         "web/index.html",
-        "web/logicResource.html"
+        "web/logicResource.html",
+        "web/tmfGrouping.html"
       ]
     }
   },

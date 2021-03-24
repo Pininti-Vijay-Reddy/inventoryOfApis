@@ -36,26 +36,19 @@ payload]]></ee:set-variable>
 		<choice doc:name="Choice" doc:id="6245df17-e023-4ba0-a2fe-049a967ad251" >
 			<when expression='#[(lower(vars.originalData.market)=="jamaica") or (lower(vars.originalData.market)=="panama") or (lower(vars.originalData.market)=="puerto rico") or (lower(vars.originalData.market)=="vtr") or (lower(vars.originalData.market)=="costa rica") or (lower(vars.originalData.market)=="chile")]'>
 				<flow-ref doc:name="Flow Reference" doc:id="83e7ce2e-8132-459b-a2bb-b4c3bafff707" name="readFilesFlow" />
-				<ee:transform doc:name="Transform Message" doc:id="e111697e-cb47-441d-b64e-c55da6118073">
-					<ee:message>
-						<ee:set-payload><![CDATA[%dw 2.0
-output application/json
----
-payload as Array]]></ee:set-payload>
-					</ee:message>
-				</ee:transform>
 				<ee:transform doc:name="Transform Message" doc:id="20b6d4bc-c725-46cd-91a2-5af5f8c12b06">
 					<ee:message>
 						<ee:set-payload><![CDATA[%dw 2.0
 output application/json
-var appName = payload.*'Application Name'
+var appName = payload.*'API'
 var country = payload.*'Country' map ($ splitBy  ",")
 ---
 payload map (payload01 , index) -> {
     application: country map {
-        "Application Name": payload01.'Application Name',
+        "API": payload01.'API',
         "Country": (payload01.'Country' splitBy  ",")[$$],
-        url: payload01.url
+        "url": payload01.url,
+        "TMF": payload01.TMF
     }
 }]]></ee:set-payload>
 					</ee:message>
@@ -74,12 +67,30 @@ flatten(payload.application) filter(value,index) -> (value.'Country' != null)]]>
 output application/json
 ---
 (payload filter ((value,index) -> 
-	(((lower(value.'Country')==lower(vars.originalData.market)) or (value.'Country' == "Common"))) and 
-	(lower(value.'Application Name') == lower(vars.originalData.project))
+	(((lower(value.'Country')==lower(vars.originalData.market)) or (value.'Country' == "Common"))) and
+	(value.TMF == vars.originalData.tmf)
 ))]]></ee:set-payload>
 					</ee:message>
 				</ee:transform>
-				<parse-template doc:name="Parse Template" doc:id="31c09bdc-42e3-4b53-a1d9-e3013723c40d" location="web\logicResource.html" />
+				<choice doc:name="Choice" doc:id="526cac80-6936-4874-9948-c29cf4b03499" >
+					<when expression="#[isEmpty(payload)]">
+						<ee:transform doc:name="Transform Message" doc:id="31fe632a-3d64-488d-bd34-f5ebb9e54b62" >
+							<ee:message >
+								<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+[{
+	"API": "No Such Resource Found...Please try again!",
+	"url": "#"
+}]]]></ee:set-payload>
+							</ee:message>
+						</ee:transform>
+						<parse-template doc:name="Parse Template" doc:id="f1c058b3-0e03-490f-a299-003526566f4a" location="web\logicResource.html"/>
+					</when>
+					<otherwise >
+						<parse-template doc:name="Parse Template" doc:id="31c09bdc-42e3-4b53-a1d9-e3013723c40d" location="web\logicResource.html" />
+					</otherwise>
+				</choice>
 			</when>
 			<otherwise>
 				<ee:transform doc:name="Transform Message" doc:id="522fb877-3dc3-43f3-a657-e9ad75ad1559" >
@@ -105,11 +116,19 @@ output application/java
 			<ee:message>
 				<ee:set-payload><![CDATA[%dw 2.0
 import * from dw::core::Strings
-output application/csv
+output application/json
 ---
 (payload filter ((value,index) -> ((lower(value.'Backend System')=="liberate") or (value.'Backend System' == "Common"))))]]></ee:set-payload>
 			</ee:message>
 			<ee:variables />
+		</ee:transform>
+		<ee:transform doc:name="Transform Message" doc:id="2f3df9bd-0504-4bb4-a8a4-93b2980ac792" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload distinctBy(value) -> {"API":value.'API'}]]></ee:set-payload>
+			</ee:message>
 		</ee:transform>
 		<parse-template doc:name="Parse Template" doc:id="4b5a6ff5-55cd-4598-af62-216ea7d8438f" location="web\logicResource.html" />
 	</flow>
@@ -120,28 +139,45 @@ output application/csv
 			<ee:message >
 				<ee:set-payload ><![CDATA[%dw 2.0
 import * from dw::core::Strings
-output application/csv
+output application/json
 ---
 (payload filter ((value,index) -> ((lower(value.'Backend System')=="cerillion") or (value.'Backend System' == "Common"))))]]></ee:set-payload>
 			</ee:message>
 			<ee:variables />
 		</ee:transform>
+		<ee:transform doc:name="Transform Message" doc:id="1d93b7ec-4c4c-4b5d-bf13-c142c2554efd">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload distinctBy(value) -> {"API":value.'API'}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
 		<parse-template doc:name="Parse Template" doc:id="29d7f374-e3f3-4281-b791-1fdd0beb850b" location="web\logicResource.html" />
 	</flow>
 	<flow name="tmfFlow" doc:id="4726323d-495f-4ee2-9c84-5f16291f3f3b" >
 		<http:listener doc:name="Listener" doc:id="a3bc91ff-1998-42ed-947e-b2ab28072156" config-ref="HTTP_Listener_config" path="/tmf" />
-		<file:read doc:name="Read" doc:id="0e45ab31-90c1-484e-becb-1373b717a9df" path="${app.home}\llaPlatforms.csv" />
-		<ee:transform doc:name="Transform Message" doc:id="8af53b31-a0be-4832-b3e8-e883ec8f591d" >
+		<flow-ref doc:name="Flow Reference" doc:id="3db97c23-b57b-49b5-bacc-a7cbfebe215d" name="readFilesFlow"/>
+		<ee:transform doc:name="Transform Message" doc:id="3814ce81-f1a2-48f6-828b-34df8573efc6" >
 			<ee:message >
 				<ee:set-payload ><![CDATA[%dw 2.0
-import * from dw::core::Strings
-output application/csv
+output application/json
 ---
-(payload filter ((value,index) -> ((lower(value.'Backend System')=="liberate") or (value.'Backend System' == "Common"))))]]></ee:set-payload>
+payload]]></ee:set-payload>
 			</ee:message>
-			<ee:variables />
+			<ee:variables >
+				<ee:set-variable variableName="tmfVariable" ><![CDATA[%dw 2.0
+output application/json
+---
+payload map
+{
+	"tmf": $.'TMF',
+	"country": $.'Country',
+	"api": $.'API'
+}]]></ee:set-variable>
+			</ee:variables>
 		</ee:transform>
-		<parse-template doc:name="Parse Template" doc:id="53f46e01-6ba5-4464-ac34-fb78dfec3713" location="web\logicResource.html" />
+		<parse-template doc:name="Parse Template" doc:id="19f78a9a-b1cc-421c-a399-132b1411d27f" location="web\tmfGrouping.html"/>
 	</flow>
 	<flow name="notFoundFlow" doc:id="0dab6819-f117-47da-bcfb-183705405305" >
 		<http:listener doc:name="Listener" doc:id="ac942cc7-41b2-4a20-8edb-3af0c0dbb551" config-ref="HTTP_Listener_config" path="/notFound"/>
@@ -160,7 +196,15 @@ output application/json
 		<flow-ref doc:name="Flow Reference" doc:id="d0bcec62-663d-491d-9e90-994411e140e8" name="commonFlow"/>
 	</flow>
 	<flow name="readFilesFlow" doc:id="7aa56d0a-ff11-4d52-afac-50ed01be5949" >
-		<file:read doc:name="Read" doc:id="44161a35-b488-482a-aea8-8e0ea319337b" path="${app.home}\llaPlatforms.csv"/>
+		<file:read doc:name="Read" doc:id="44161a35-b488-482a-aea8-8e0ea319337b" path="${app.home}\tmfDetails.csv"/>
+		<ee:transform doc:name="Transform Message" doc:id="fc906c37-6af3-4a42-b06e-d6129b00f6a0" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload as Array]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
 	
 </flow>
 	<flow name="commonFlow" doc:id="68e5ff68-ec80-4b10-b42f-664f2bbe5dac" >

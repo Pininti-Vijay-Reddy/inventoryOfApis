@@ -40,13 +40,12 @@
 			  </table>
 			  <script type="text/javascript">
 		var tbody = document.getElementById("rows");
-		var payloadArray = #[payload.'Application Name'];
-		var urlArray = #[payload.url];
+		var payloadArray = #[payload];
 		console.log("Payload Array : ", payloadArray)
 		for(var i = 0; i < payloadArray.length; i++){
 		tbody.innerHTML += `
 			<tr>
-				<td><a href=${urlArray[i]}>${payloadArray[i]} </a></td>
+				<td><a href=${payloadArray[i].url}>${payloadArray[i].API} </a></td>
 			</tr>
 		`;
 		}
